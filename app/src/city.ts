@@ -244,9 +244,27 @@ export class City {
   private v1 = new THREE.Vector3();
   private v2 = new THREE.Vector3();
   private orbit = new THREE.Spherical();
+  // The wheel is captured on the whole stage, not only the canvas: titles,
+  // labels and help text sit on top of the scene and used to swallow it.
+  private wheelTarget: HTMLElement;
   private onWheel = (event: WheelEvent) => {
-    // Trackpad two-finger scroll translates the camera. Pinch arrives as ctrl+wheel.
-    if (event.ctrlKey || event.metaKey) return;
+    const target = event.target as Element | null;
+    if (
+      this.dimmed ||
+      target?.closest(
+        ".circuit-panel, .left-sidebar, .right-sidebar, select, input, textarea, dialog",
+      )
+    )
+      return;
+    if (event.ctrlKey || event.metaKey) {
+      // Pinch arrives as ctrl+wheel. On the canvas OrbitControls zooms; over
+      // an overlay we zoom here so the browser does not zoom the page.
+      if (target === this.renderer.domElement) return;
+      event.preventDefault();
+      this.zoomBy(Math.exp(event.deltaY * 0.01));
+      return;
+    }
+    // Trackpad two-finger scroll translates the camera.
     event.preventDefault();
     event.stopImmediatePropagation();
     this.targetPosition = null;
@@ -278,6 +296,22 @@ export class City {
     this.controls.update();
     this.invalidate();
   };
+  private zoomBy(factor: number) {
+    this.targetPosition = null;
+    this.targetLook = null;
+    this.targetOrbit = null;
+    const offset = this.v1.copy(this.camera.position).sub(this.controls.target);
+    offset.setLength(
+      THREE.MathUtils.clamp(
+        offset.length() * factor,
+        this.controls.minDistance,
+        this.controls.maxDistance,
+      ),
+    );
+    this.camera.position.copy(this.controls.target).add(offset);
+    this.controls.update();
+    this.invalidate();
+  }
   /** Panning stops at the board's edge so the processor cannot be lost off screen. */
   private keepOnBoard() {
     const t = this.controls.target,
@@ -374,7 +408,9 @@ export class City {
     this.controls.minPolarAngle = 0.1;
     this.controls.maxPolarAngle = Math.PI * 0.47;
     this.controls.zoomSpeed = 0.65;
-    this.renderer.domElement.addEventListener("wheel", this.onWheel, {
+    this.wheelTarget =
+      container.closest<HTMLElement>(".stage") ?? container.parentElement ?? container;
+    this.wheelTarget.addEventListener("wheel", this.onWheel, {
       passive: false,
       capture: true,
     });
@@ -1364,7 +1400,7 @@ export class City {
     cancelAnimationFrame(this.animation);
     this.observer.disconnect();
     document.removeEventListener("visibilitychange", this.onVisibility);
-    this.renderer.domElement.removeEventListener("wheel", this.onWheel, true);
+    this.wheelTarget.removeEventListener("wheel", this.onWheel, true);
     this.controls.dispose();
     const geometries = new Set<THREE.BufferGeometry>(),
       materials = new Set<THREE.Material>();
