@@ -1,7 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;450;500;600&display=swap");
 
 :root {
-  font-family: "DM Sans", sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   color: #dbe4e8;
   background: #080d13;
   font-synthesis: none;
@@ -11,7 +10,7 @@
   --muted: #83929e;
   --accent: #80e4ca;
   --amber: #f2bc80;
-  --mono: "IBM Plex Mono", monospace;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 * {
   box-sizing: border-box;
@@ -109,7 +108,7 @@ button:hover:not(:disabled) {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 23px;
   font-weight: 600;
   letter-spacing: 1.2px;
@@ -553,7 +552,7 @@ select {
 }
 h1 {
   font:
-    400 clamp(24px, 2.1vw, 35px) / 1.15 "Space Grotesk",
+    400 clamp(24px, 2.1vw, 35px) / 1.15 Arial,
     sans-serif;
   letter-spacing: -1.3px;
   margin: 13px 0 10px;
@@ -655,7 +654,7 @@ h1 > span {
 }
 .camera-help b {
   font:
-    9px "DM Sans",
+    9px Arial,
     sans-serif;
   letter-spacing: 0;
   color: #82969f;
@@ -670,7 +669,6 @@ h1 > span {
   border: 1px solid #49636569;
   border-radius: 4px;
   color: #c1d9d7;
-  backdrop-filter: blur(8px);
   padding: 7px 9px;
   display: grid;
   grid-template-columns: 5px auto 9px;
@@ -681,14 +679,22 @@ h1 > span {
   white-space: nowrap;
   transition:
     background 0.2s,
-    border-color 0.2s;
+    border-color 0.2s,
+    opacity 0.18s,
+    visibility 0.18s;
   will-change: transform;
+  contain: layout style;
+}
+.world-label.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 .world-label small {
   grid-column: 2 / 4;
   letter-spacing: 0;
   font:
-    8px "DM Sans",
+    8px Arial,
     sans-serif;
   color: #8caaa8;
 }
@@ -818,7 +824,7 @@ h1 > span {
 }
 .inspector-main h2 {
   font:
-    400 24px "Space Grotesk",
+    400 24px Arial,
     sans-serif;
   letter-spacing: -0.7px;
   margin: 7px 0 7px;
@@ -883,7 +889,7 @@ h1 > span {
 }
 .alu-result > strong {
   font:
-    400 34px "Space Grotesk",
+    400 34px Arial,
     sans-serif;
   display: block;
   letter-spacing: -0.7px;
@@ -1256,7 +1262,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .circuit-header h2 {
   font:
-    400 22px "Space Grotesk",
+    400 22px Arial,
     sans-serif;
   letter-spacing: -0.8px;
   margin: 8px 0 0;
@@ -1450,7 +1456,7 @@ dialog::backdrop {
 }
 dialog h2 {
   font:
-    400 31px "Space Grotesk",
+    400 31px Arial,
     sans-serif;
   letter-spacing: -1px;
   margin: 20px 0;

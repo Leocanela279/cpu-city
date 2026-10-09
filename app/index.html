@@ -9,6 +9,16 @@
       content="Explora una CPU como una ciudad. Ejecuta ensamblador RISC-V y sigue cada instrucción hasta los circuitos de la ALU."
     />
     <title>CPU City — Una ciudad que piensa</title>
+    <meta name="color-scheme" content="dark" />
+    <!-- Paint the page background before the stylesheet arrives (no white flash). -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #101417;
+        color: #c9d8c9;
+      }
+    </style>
     <link rel="canonical" href="https://cpu-city.vercel.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="CPU City" />
@@ -56,6 +66,11 @@
   </head>
   <body>
     <div id="app"></div>
+    <noscript>
+      <p style="padding: 24px; font: 14px/1.6 Arial, sans-serif; color: #c9d8c9">
+        CPU City necesita JavaScript para ejecutar el simulador y la vista 3D.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

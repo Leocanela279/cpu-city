@@ -1,6 +1,10 @@
+import "@fontsource/ibm-plex-mono/latin-400.css";
+import "@fontsource/ibm-plex-mono/latin-500.css";
+import "@fontsource/ibm-plex-mono/latin-600.css";
 import "./style.css";
 import "./instrument.css";
-import { City, UNITS } from "./city.ts";
+import { UNITS } from "./units.ts";
+import type { City } from "./city.ts";
 import { EXAMPLES, PHASES, adderBits, hex } from "./cpu.ts";
 import type { Snapshot, Unit } from "./cpu.ts";
 
@@ -68,7 +72,7 @@ $("app").innerHTML = `
     <section class="stage" aria-label="Exploración de la CPU">
       <div class="scene-heading"><div class="eyebrow" id="scale-label">SUPERFICIE</div><h1 id="scene-title">El procesador.</h1><p id="scene-description">Acércate para descubrir lo que ocurre dentro.</p><button id="enter-chip" class="enter-chip">Explorar el interior <span>↘</span></button></div>
       <div id="city-canvas" class="city-canvas"></div>
-      <div id="scene-loading" class="scene-loading"><span class="loader"></span>Construyendo la ciudad…</div>
+      <div id="scene-loading" class="scene-loading" role="status"><span class="loader" aria-hidden="true"></span><span id="loading-text">Cargando el motor 3D…</span></div>
       <div id="circuit-panel" class="circuit-panel" hidden>
         <div class="circuit-header"><div><span class="eyebrow">DENTRO DE LA ALU</span><h2 id="circuit-title">Sumador de 32 bits</h2></div><span id="circuit-operation" class="operation-tag">ADD</span></div>
         <div id="binary-operands" class="binary-operands"></div>
@@ -92,7 +96,7 @@ $("app").innerHTML = `
   <section class="execution-dock" aria-label="Control de ejecución">
     <div class="execution-top"><div class="execution-title"><span class="status-dot" id="execution-dot"></span><span id="execution-state">PREPARADO</span><span class="dock-divider"></span><code id="current-instruction">Esperando primera instrucción</code></div><div class="execution-counters"><span>CICLO <b id="cycle-count">0000</b></span><span>PC <b id="pc-value">0x00000000</b></span><span>INSTR. <b id="retired-count">0</b></span></div></div>
     <div class="execution-bottom"><div class="playback"><button id="play" class="play-button">${icon("play")}<span>Ejecutar</span></button><button id="step" class="icon-button" title="Avanzar un ciclo" aria-label="Avanzar un ciclo">${icon("step")}</button><button id="instruction" class="icon-button" title="Completar una instrucción" aria-label="Completar una instrucción">${icon("next")}</button><button id="back" class="icon-button" title="Retroceder un ciclo (hasta 128)" aria-label="Retroceder un ciclo">${icon("back")}</button><button id="reset" class="icon-button" title="Reiniciar programa" aria-label="Reiniciar programa">${icon("reset")}</button></div><div id="pipeline" class="pipeline">${PHASES.map((p, i) => `<div class="phase" data-phase="${p}"><span class="phase-code">${phaseShort[i]}</span><span>${phaseNames[p]}</span><span class="phase-index">0${i + 1}</span></div>`).join("")}</div><div class="speed-control"><label for="speed">RELOJ DIDÁCTICO <b id="speed-label">2 ciclos/s</b></label><input id="speed" type="range" min="1" max="10" value="2"/></div></div>
-    <div class="execution-message"><span id="cycle-message" role="status" aria-live="polite">Programa cargado. La ciudad está lista.</span><span class="render-status"><span id="fps">—</span> FPS <span class="dim">/</span> WEBGL 2</span></div>
+    <div class="execution-message"><span id="cycle-message" role="status" aria-live="polite">Programa cargado. La ciudad está lista.</span><span class="render-status" title="Fotogramas por segundo y escala de resolución. La escena no se dibuja cuando está quieta."><span id="fps">—</span><span id="fps-unit"> FPS</span> <span class="dim">/</span> WEBGL 2 <span id="render-scale"></span></span></div>
   </section>
   <dialog id="guide-dialog"><div class="guide-top"><span class="eyebrow">BIENVENIDO A CPU CITY</span><button id="close-guide" class="icon-button" aria-label="Cerrar guía">${icon("close")}</button></div><h2>Del código a los circuitos<span>.</span></h2><p>Una CPU educativa de 32 bits, representada como una ciudad. Su estado se calcula en tu navegador y cada cambio alimenta la visualización.</p><ol><li><strong>Ejecuta un programa.</strong> Elige un ejemplo o edita el ensamblador y pulsa Cargar.</li><li><strong>Sigue la instrucción.</strong> Usa Ejecutar, avanza un ciclo o completa una instrucción. Puedes retroceder hasta 128 ciclos.</li><li><strong>Entra en la ALU.</strong> Abre Circuito ALU y selecciona un bit para ver cómo se genera el resultado.</li></ol><h3>Qué representa este MVP</h3><p>Un núcleo multiciclo de seis fases por instrucción, sin cachés, pipeline ni sistema operativo. El programa es de solo lectura; la memoria de datos es un espacio separado de 4 KiB. El circuito detallado cubre sumas, restas y operaciones AND, OR y XOR. Los ciclos son del modelo educativo, no de tu CPU física.</p><h3>Ensamblador disponible</h3><p class="instruction-list">ADD · SUB · AND · OR · XOR · SLL · SRL · SRA · SLT · SLTU<br>ADDI · ANDI · ORI · XORI · SLLI · SRLI · SRAI · SLTI · SLTIU<br>LW · SW · BEQ · BNE · BLT · BGE · BLTU · BGEU<br>LUI · AUIPC · JAL · JALR · EBREAK</p><p>También: etiquetas, alias de registros, comentarios con # o ; y pseudoinstrucciones MV, NOP, J y LI (inmediatos de −2048 a 2047). C y compilación a RISC-V quedan para la siguiente fase.</p><div class="guide-shortcut"><kbd>Espacio</kbd> ejecutar / pausar <kbd>→</kbd> un ciclo <kbd>←</kbd> retroceder <span>Fuera del editor</span></div></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
@@ -112,6 +116,7 @@ let depth = 0;
 let loadedSource = EXAMPLES.sum.source;
 let requestedSource: string | null = null;
 let sourceScroll = 0;
+let lastMemoryHtml = "";
 const source = $<HTMLTextAreaElement>("source");
 const worker = new Worker(new URL("./simulation.worker.ts", import.meta.url), {
   type: "module",
@@ -173,6 +178,9 @@ function updateButtons() {
             ? "EN PAUSA"
             : "PREPARADO";
   $("execution-dot").classList.toggle("pulsing", running);
+  city?.setRunning(running);
+  // Announcing every cycle at up to 10 per second floods screen readers.
+  $("cycle-message").setAttribute("aria-live", running ? "off" : "polite");
 }
 function loadProgram(text: string) {
   stop();
@@ -246,12 +254,17 @@ function renderState() {
     el.classList.toggle("nonzero", value !== 0);
   }
   updateCurrentLine();
-  $("memory-rows").innerHTML = state.memory
+  const memoryHtml = state.memory
     .map(
       (row) =>
         `<div class="memory-row ${row.address === state!.address ? "accessed" : ""}"><span>${hex(row.address).replace("0x0000", "0x")}</span><code>${row.value.toString(16).toUpperCase().padStart(8, "0")}</code></div>`,
     )
     .join("");
+  // Rebuilding the table on every cycle is wasted work when nothing changed.
+  if (memoryHtml !== lastMemoryHtml) {
+    $("memory-rows").innerHTML = memoryHtml;
+    lastMemoryHtml = memoryHtml;
+  }
   renderInspector();
   if (circuit) renderCircuit();
   updateButtons();
@@ -363,6 +376,7 @@ function setView(showCircuit: boolean) {
   circuit = showCircuit;
   $("circuit-panel").hidden = !circuit;
   document.querySelector(".stage")!.classList.toggle("circuit-mode", circuit);
+  city?.setDimmed(circuit);
   for (const [id, selected] of [
     ["city-view", !circuit],
     ["circuit-view", circuit],
@@ -586,13 +600,23 @@ for (const id of ["signals-toggle", "labels-toggle"])
     if (id === "signals-toggle") city?.setSignals(active);
     else city?.setLabels(active);
   };
+const QUALITY_KEY = "cpu-city:quality";
 let qualityHigh = true;
+try {
+  qualityHigh = localStorage.getItem(QUALITY_KEY) !== "light";
+} catch {}
+function showQuality() {
+  $("quality-toggle").textContent = qualityHigh ? "Calidad alta" : "Modo ligero";
+  $("quality-toggle").setAttribute("aria-pressed", String(!qualityHigh));
+}
+showQuality();
 $("quality-toggle").onclick = () => {
   qualityHigh = !qualityHigh;
   city?.setQuality(qualityHigh);
-  $("quality-toggle").textContent = qualityHigh
-    ? "Calidad alta"
-    : "Modo ligero";
+  showQuality();
+  try {
+    localStorage.setItem(QUALITY_KEY, qualityHigh ? "high" : "light");
+  } catch {}
 };
 const guide = $<HTMLDialogElement>("guide-dialog");
 $("guide-button").onclick = () => {
@@ -638,31 +662,68 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) stop();
 });
 loadProgram(loadedSource);
-requestAnimationFrame(() => {
-  try {
-    city = new City(
-      $("city-canvas"),
-      (unit) => {
-        selectUnit(unit, false);
-        drawer("data", true);
-      },
-      (fps) => {
-        $("fps").textContent = String(fps);
-      },
-      updateDepth,
-    );
-    if (state) city.setState(state);
+function showFps(fps: number | null, ratio: number) {
+  $("fps").textContent = fps === null ? "EN REPOSO" : String(fps);
+  $("fps-unit").hidden = fps === null;
+  $("render-scale").textContent = `· ${Number(ratio.toFixed(2))}×`;
+}
+function showSceneError(title: string, text: string, retry: boolean) {
+  $("scene-loading").innerHTML =
+    `<div class="webgl-error">${icon("chip")}<strong>${title}</strong><p>${text}</p><div class="webgl-error-actions">${retry ? `<button class="outline-button" id="retry-scene">Reintentar</button>` : ""}<button class="outline-button" id="fallback-circuit">Abrir circuito ALU</button></div></div>`;
+  $("fallback-circuit").onclick = () => {
     $("scene-loading").hidden = true;
-  } catch {
-    $("scene-loading").innerHTML =
-      `<div class="webgl-error">${icon("chip")}<strong>La vista 3D necesita WebGL 2</strong><p>Activa la aceleración gráfica o prueba otro navegador. Puedes seguir usando el simulador y el circuito ALU.</p><button class="outline-button" id="fallback-circuit">Abrir circuito ALU</button></div>`;
-    $("fallback-circuit").onclick = () => {
-      $("scene-loading").hidden = true;
-      setView(true);
-    };
-    $("fps").textContent = "—";
-  }
-});
+    setView(true);
+  };
+  if (retry) $("retry-scene").onclick = () => location.reload();
+  $("fps").textContent = "—";
+}
+// Three.js is loaded as a separate chunk so the interface and the simulator are
+// usable before the 3D engine has downloaded.
+const stage = document.querySelector<HTMLElement>(".stage")!;
+stage.classList.add("scene-pending");
+import("./city.ts")
+  .then(({ City }) => {
+    $("loading-text").textContent = "Construyendo la ciudad…";
+    // Let the new text paint before the synchronous scene build.
+    requestAnimationFrame(() =>
+      setTimeout(() => {
+        try {
+          performance.mark("city:start");
+          city = new City(
+            $("city-canvas"),
+            (unit) => {
+              selectUnit(unit, false);
+              drawer("data", true);
+            },
+            showFps,
+            updateDepth,
+          );
+          performance.measure("city:build", "city:start");
+          if (!qualityHigh) city.setQuality(false);
+          if (state) city.setState(state);
+          city.setRunning(running);
+          city.setDimmed(circuit);
+          stage.classList.remove("scene-pending");
+          $("scene-loading").classList.add("is-done");
+          setTimeout(() => ($("scene-loading").hidden = true), 400);
+        } catch {
+          stage.classList.remove("scene-pending");
+          showSceneError(
+            "La vista 3D necesita WebGL 2",
+            "Activa la aceleración gráfica o prueba otro navegador. Puedes seguir usando el simulador y el circuito ALU.",
+            false,
+          );
+        }
+      }),
+    );
+  })
+  .catch(() =>
+    showSceneError(
+      "No se pudo descargar la vista 3D",
+      "Comprueba la conexión y vuelve a intentarlo. El simulador y el circuito ALU siguen disponibles.",
+      true,
+    ),
+  );
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     stop();

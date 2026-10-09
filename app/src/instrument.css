@@ -223,7 +223,9 @@
   width: 0;
 }
 .world-label {
-  background: #121b1bbb;
+  /* Opaque enough to read without a backdrop blur, which had to be
+     recomputed on every frame while the labels move. */
+  background: #121b1be8;
   border: 0;
   border-bottom: 1px solid #839a8a;
   border-radius: 0;
@@ -951,5 +953,37 @@ select,
   }
   .camera-controls button.pan-mode {
     min-width: 66px;
+  }
+}
+
+/* Loading: the interface is usable while the 3D engine downloads. */
+.scene-loading {
+  transition: opacity 0.35s ease;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+.scene-loading.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+.scene-pending .camera-controls,
+.scene-pending .scene-tools,
+.scene-pending .enter-chip {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.webgl-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+#render-scale {
+  color: #8b9a9f;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-loading,
+  .world-label {
+    transition: none;
   }
 }

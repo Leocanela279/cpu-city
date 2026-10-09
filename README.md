@@ -60,6 +60,15 @@ El lockfile incluye los paquetes opcionales de Rollup y esbuild para todas las p
 - Ejecutar/pausar, avanzar un ciclo, completar una instrucción, retroceder hasta 128 ciclos y reiniciar.
 - Atajos fuera de los campos y botones: espacio para ejecutar/pausar, derecha para avanzar y izquierda para retroceder.
 
+## Rendimiento
+
+- **Render bajo demanda.** La escena solo se dibuja cuando algo cambia: cámara, transiciones, estado de la CPU o señales en movimiento. En reposo no consume GPU, y el indicador muestra «EN REPOSO». Al pausar el programa, las señales se detienen; en la vista del circuito, la ciudad queda quieta debajo.
+- **Resolución adaptativa.** Si los fotogramas superan unos 22 ms, la escala de píxeles baja en pasos de 0,25 (hasta 1×) y vuelve a subir cuando hay margen, sin pasar del último nivel que no aguantó. La escala actual aparece junto a los FPS. En pantallas táctiles o estrechas empieza en 1,5× como máximo.
+- **Carga en dos fases.** La interfaz y el simulador (~33 kB) se muestran antes de que Three.js (~140 kB gzip) termine de descargarse. Three.js va en su propio chunk, que el navegador conserva en caché entre despliegues.
+- **Fuentes locales.** IBM Plex Mono se sirve desde el propio sitio (pesos 400–600, subconjunto latino). No hay peticiones a Google Fonts, lo que evita el bloqueo del render y la transferencia de IP a terceros.
+- **Menos trabajo por fotograma.** Sin lecturas de layout por frame; las etiquetas solo se actualizan si se mueven y se ocultan sin recalcular el layout; sin búfer antialiasing redundante (el MSAA lo hace el compositor). Las texturas de ruido se generan a partir de un mosaico de 256 px en lugar de recorrer 2048² píxeles.
+- **Modo ligero** (1×, sin bloom ni sombras, MSAA 2×). La preferencia se guarda en el navegador.
+
 ## Alcance del MVP
 
 - TypeScript, Three.js y Vite. Geometrías agrupadas e instancias para componentes repetidos; materiales PBR, iluminación de entorno, sombras y calidad reducida opcional.
@@ -74,8 +83,10 @@ El lockfile incluye los paquetes opcionales de Rollup y esbuild para todas las p
 
 - `app/src/cpu.ts`: ensamblador y máquina determinista.
 - `app/src/simulation.worker.ts`: ejecución fuera del hilo de la interfaz.
-- `app/src/city.ts`: procesador, placa, ciudad y cámara.
+- `app/src/city.ts`: procesador, placa, ciudad, cámara y bucle de render bajo demanda. Se carga de forma diferida.
+- `app/src/units.ts`: datos de los componentes compartidos por la interfaz y la escena.
 - `app/src/main.ts`: editor, reproducción e inspección de circuitos.
+- `app/vite.config.ts`: chunk separado para Three.js.
 - `app/tests/cpu.test.ts`: pruebas del conjunto de instrucciones, memoria y acarreos.
 
 La compilación produce `app/dist`, incluidos los recursos del Web Worker. WebGL 2 es necesario para la escena 3D; el circuito y el simulador disponen de una alternativa cuando no está disponible. Las fuentes externas tienen alternativas locales.
