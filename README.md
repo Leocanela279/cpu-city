@@ -37,7 +37,17 @@ npx vercel
 npx vercel --prod
 ```
 
-Estas instrucciones preparan el despliegue; todavía no hay un despliegue realizado en Vercel. Referencia: https://vercel.com/docs/project-configuration/vercel-json
+URL de producción: https://cpu-city.vercel.app/. Referencia de configuración: https://vercel.com/docs/project-configuration/vercel-json
+
+### Vista previa al compartir
+
+El HTML inicial incluye Open Graph y Twitter Card con título, descripción en español, URL canónica e imagen JPEG de 1200 × 630. No requiere ejecutar JavaScript para leer las etiquetas. La imagen se sirve desde `app/public/og-image.jpg` y se copia a la salida de producción durante el build.
+
+Si se cambia el dominio, hay que actualizar las URL absolutas de `app/index.html`. El diseño original de la portada está en `app/social-preview.html`: con el servidor de desarrollo abierto, visitar `/social-preview.html` y capturar el área de 1200 × 630 para regenerar la imagen. Esta página de diseño no forma parte de la compilación de producción.
+
+### Dependencias en Linux
+
+El lockfile incluye los paquetes opcionales de Rollup y esbuild para todas las plataformas, incluido Linux en Vercel. Al regenerarlo, hacerlo sin un `node_modules` previo para evitar que npm conserve solamente las dependencias nativas del ordenador local.
 
 ## Controles
 

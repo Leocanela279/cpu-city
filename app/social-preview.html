@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>CPU City — Imagen para compartir</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #0c1013;
+        color: #f0f2ed;
+        font-family: Arial, sans-serif;
+      }
+      #scene {
+        position: absolute;
+        inset: -20px -190px -60px 320px;
+      }
+      #scene canvas {
+        display: block;
+      }
+      .shade {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(
+            90deg,
+            #0c1013 5%,
+            rgba(12, 16, 19, 0.96) 28%,
+            rgba(12, 16, 19, 0.1) 60%,
+            transparent
+          ),
+          linear-gradient(0deg, rgba(12, 16, 19, 0.8), transparent 35%);
+      }
+      main {
+        position: relative;
+        padding: 54px 58px;
+        height: 100%;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        font-size: 20px;
+        letter-spacing: 4px;
+      }
+      .brand svg {
+        color: #9fcdbb;
+      }
+      h1 {
+        font-size: 66px;
+        line-height: 1.04;
+        font-weight: 500;
+        letter-spacing: -3px;
+        margin: 97px 0 23px;
+      }
+      h1 span {
+        color: #9fcdbb;
+      }
+      p {
+        font-size: 21px;
+        line-height: 1.5;
+        color: #b7c1c4;
+        margin: 0;
+      }
+      footer {
+        position: absolute;
+        bottom: 49px;
+        left: 58px;
+        right: 58px;
+        display: flex;
+        justify-content: space-between;
+        font: 12px monospace;
+        letter-spacing: 2px;
+        color: #8c9a9f;
+      }
+      footer strong {
+        color: #d8ad73;
+        font-weight: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scene"></div>
+    <div class="shade"></div>
+    <main>
+      <div class="brand">
+        <svg
+          width="27"
+          height="27"
+          viewBox="0 0 32 32"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            d="M8 8h16v16H8zM12 12h8v8h-8zM12 3v5m8-5v5M12 24v5m8-5v5M3 12h5m-5 8h5m16-8h5m-5 8h5"
+          /></svg
+        >CPU CITY
+      </div>
+      <h1>Una ciudad.<br /><span>Dentro de tu CPU.</span></h1>
+      <p>
+        Explora el procesador en 3D.<br />Sigue cada instrucción hasta la ALU.
+      </p>
+      <footer>
+        <span>EXPLORA · PROGRAMA · COMPRENDE</span
+        ><strong>RISC-V / 32 BITS</strong>
+      </footer>
+    </main>
+    <script type="module">
+      import { City } from "/src/city.ts";
+      const city = new City(
+        document.querySelector("#scene"),
+        () => {},
+        () => {},
+      );
+      city.setLabels(false);
+      city.focus();
+    </script>
+  </body>
+</html>
