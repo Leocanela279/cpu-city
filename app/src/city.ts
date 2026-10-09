@@ -275,6 +275,7 @@ export class City {
     this.camera.position.add(offset);
     this.controls.target.add(offset);
     this.controls.update();
+    this.invalidate();
   };
   private onVisibility = () => {
     if (!document.hidden) this.invalidate();
@@ -371,7 +372,10 @@ export class City {
       this.targetOrbit = null;
       this.wake();
     });
-    this.controls.addEventListener("change", this.wake);
+    // OrbitControls applies wheel zoom, pinch and drags inside its own event
+    // handlers, so the next frame sees no further movement. Every change must
+    // therefore mark the frame dirty, not only restart the loop.
+    this.controls.addEventListener("change", () => this.invalidate());
     this.samples = Math.min(4, this.renderer.capabilities.maxSamples);
     const target = new THREE.WebGLRenderTarget(1, 1, {
       type: THREE.HalfFloatType,
