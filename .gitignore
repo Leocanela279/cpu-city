@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.sites-runtime/
+*.tgz
+.DS_Store
+.vercel/
+artifacts/
+.env*
+!.env.example
