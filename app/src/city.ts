@@ -274,9 +274,21 @@ export class City {
       .add(up.multiplyScalar(-dy * scale));
     this.camera.position.add(offset);
     this.controls.target.add(offset);
+    this.keepOnBoard();
     this.controls.update();
     this.invalidate();
   };
+  /** Panning stops at the board's edge so the processor cannot be lost off screen. */
+  private keepOnBoard() {
+    const t = this.controls.target,
+      x = THREE.MathUtils.clamp(t.x, -64, 64),
+      y = THREE.MathUtils.clamp(t.y, -2, 14),
+      z = THREE.MathUtils.clamp(t.z, -52, 52);
+    if (x === t.x && y === t.y && z === t.z) return;
+    this.v2.set(x - t.x, y - t.y, z - t.z);
+    t.add(this.v2);
+    this.camera.position.add(this.v2);
+  }
   private onVisibility = () => {
     if (!document.hidden) this.invalidate();
   };
@@ -1194,7 +1206,10 @@ export class City {
       changed = true;
     }
     // Returns true while the camera moves, including damping after release.
-    if (this.controls.update()) changed = true;
+    if (this.controls.update()) {
+      this.keepOnBoard();
+      changed = true;
+    }
     const distance = this.camera.position.distanceTo(this.controls.target),
       depth = THREE.MathUtils.clamp((104 - distance) / 55, 0, 1),
       reveal = smooth(0.12, 0.9, depth);
